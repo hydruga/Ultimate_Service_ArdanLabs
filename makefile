@@ -7,6 +7,9 @@ git-add:
 run:
 	go run main.go
 
+get-zar:
+	ls -al | grep zar
+
 
 # build:
 # 	go build -ldflags "-X main.build=local" # setting build var to "local"
