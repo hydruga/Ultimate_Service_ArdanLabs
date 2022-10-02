@@ -5,22 +5,22 @@ ARG BUIL_REF
 #copying code into container
 COPY . /service
 
-WORKDIR /service
+WORKDIR /service/app/services/sales-api
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 FROM alpine:3.14
 ARG BUILD_DATE
 ARG BUILD_REF
 # go build takes name service from the context of the folder here
-COPY --from=build_sales-api /service /service
+COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
 # #RUN chown -R root.root service
 # RUN ["chmod","+x","service"]
 WORKDIR /service
-CMD ["./ultimate_service"]
+CMD ["./sales-api"]
 
-# LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-#       org.opencontainers.image.title="sales-api" \
-#       org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
-#       org.opencontainers.image.source="https://github.com/ardanlabs/service/app/sales-api" \
-#       org.opencontainers.image.revision="${BUILD_REF}" \
-#       org.opencontainers.image.vendor="Ardan Labs"
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="sales-api" \
+      org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
+      org.opencontainers.image.source="https://github.com/ardanlabs/service/app/sales-api" \
+      org.opencontainers.image.revision="${BUILD_REF}" \
+      org.opencontainers.image.vendor="Ardan Labs"

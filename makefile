@@ -17,12 +17,12 @@ run:
 
 VERSION := 1.0
 
-all: service
+all: sales-api
 
-service:
+sales-api:
 	docker build \
-		-f zarf/docker/dockerfile \
-		-t service-amd64:$(VERSION) \
+		-f zarf/docker/dockerfile.sales-api \
+		-t sales-api-amd64:$(VERSION) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=`date -u + "%Y-%m-%dT%H:%M:%SZ"` \
 		.
@@ -39,30 +39,33 @@ kind-up:
 		--image kindest/node:v1.24.6@sha256:97e8d00bc37a7598a0b32d1fabd155a96355c49fa0d4d4790aab0f161bf31be1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/kind/kind-config.yml
-	kubectl config set-context --current --namespace=service-system 
+	kubectl config set-context --current --namespace=sales-system 
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
+#Use kustomize to replace our VERSION from VERSION in make file here
 kind-load:
-	kind load docker-image service-amd64:$(VERSION) --name $(KIND_CLUSTER)
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
+	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 # Can use cat for file then use as input for apply -f
-# cat zarf/k8s/base/service-pod/base-service.yml | kubectl apply -f -
+# cat zarf/k8s/base/sales-pod/base-sales.yml | kubectl apply -f -
 kind-apply:
-	kustomize build zarf/k8s/kind/service-pod | kubectl apply -f -
+	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
+	kubectl get pods -o wide --all-namespaces
 
 kind-logs:
-	kubectl logs -l app=service -f --tail=100 
+	kubectl logs -l app=sales -f --tail=100 
 
 kind-restart:
-	kubectl rollout restart deployment service-dep
+	kubectl rollout restart deployment sales-dep
 
-kind-status-service:
+kind-status-sales:
 	kubectl get pods -o wide -w 
 
 kind-update: all kind-load kind-restart
@@ -70,7 +73,7 @@ kind-update: all kind-load kind-restart
 kind-update-apply: all kind-load kind-apply
 
 kind-describe:
-	kubectl describe pod -l app=service
+	kubectl describe pod -l app=sales
 
 #++++++++++++++++++++ GO MODULE SUPPORT ++++++++++++++++++++++++++++++
 

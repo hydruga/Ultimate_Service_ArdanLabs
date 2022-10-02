@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-dep
-  namespace: service-system
+  name: sales-dep
+  namespace: sales-system
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: service
+      app: sales
   template:
     metadata:
       labels:
-        app: service
+        app: sales
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       containers:
-      # service-api container configuration
-      - name: service-api-pod
+      # sales-api container configuration
+      - name: sales-api-pod
         resources:
           limits:
             cpu: "2000m" # Up to 2 full cores
