@@ -1,11 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"os"
-
+	"github.com/ardanlabs/conf"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
+	"runtime"
+	"time"
 )
 
 var build = "develop"
@@ -28,6 +32,39 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
+	//============== GOMAXPROCS ========================
+	if _, err := maxprocs.Set(); err != nil {
+		return fmt.Errorf("maxprocs: %w", err)
+	}
+	log.Infow("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	//=============== CONFIGURATION =====================
+	cfg := struct {
+		conf.Version
+		Web struct {
+			APIHOST         string        `conf:"default:0.0.0.0:3000"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000"`
+			ReadTimeout     time.Duration `conf:"default:5s"`
+			WriteTimeout    time.Duration `conf:"default:10s"`
+			IdleTimeout     time.Duration `conf:"default:120"`
+			ShutdownTimeout time.Duration `conf:"default:20s"`
+		}
+	}{
+		Version: conf.Version{
+			SVN:  build,
+			Desc: "copyright information here",
+		},
+	}
+
+	const prefix = "SALES"
+	help, err := conf.ParseOSArgs(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
 	return nil
 }
 

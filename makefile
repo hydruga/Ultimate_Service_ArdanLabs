@@ -13,7 +13,7 @@ git-add:
 	git commit -m "New files added"
 
 run:
-	go run main.go
+	go run app/services/sales-api/main.go --help
 
 VERSION := 1.0
 
@@ -79,4 +79,4 @@ kind-describe:
 
 tidy:
 	go mod tidy
-	go mod vendor
+#go mod vendor
