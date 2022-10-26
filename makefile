@@ -13,7 +13,7 @@ git-add:
 	git commit -m "New files added"
 
 run:
-	go run app/services/sales-api/main.go --help
+	go run app/services/sales-api/main.go | go run app/tooling/logfmt/main.go
 
 VERSION := 1.0
 

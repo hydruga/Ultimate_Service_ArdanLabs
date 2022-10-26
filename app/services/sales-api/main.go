@@ -3,15 +3,22 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/ardanlabs/conf"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"runtime"
-	"time"
 )
 
+/*
+TO-DO's:
+Figure out timeouts for http service
+*/
 var build = "develop"
 
 func main() {
@@ -46,8 +53,8 @@ func run(log *zap.SugaredLogger) error {
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:10s"`
-			IdleTimeout     time.Duration `conf:"default:120"`
-			ShutdownTimeout time.Duration `conf:"default:20s"`
+			IdleTimeout     time.Duration `conf:"default:120s"`
+			ShutdownTimeout time.Duration `conf:"default:20s,mask"` //mask can be used as well as noprint here
 		}
 	}{
 		Version: conf.Version{
@@ -65,6 +72,24 @@ func run(log *zap.SugaredLogger) error {
 		}
 		return fmt.Errorf("parsing config: %w", err)
 	}
+
+	// =========================================================================
+	// App Starting
+
+	log.Infow("starting service", "version", build)
+	defer log.Infow("shutdown complete")
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+	log.Infow("startup", "config", out)
+
+	// Hold program hostage for a bit
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+	<-shutdown
+
 	return nil
 }
 
