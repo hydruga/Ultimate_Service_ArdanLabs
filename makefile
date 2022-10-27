@@ -59,8 +59,9 @@ kind-status:
 	kubectl get svc -o wide
 	kubectl get pods -o wide --all-namespaces
 
+# We pipe to our logfmt just for human readable logging here, otherwise we get structured logging.
 kind-logs:
-	kubectl logs -l app=sales -f --tail=100 
+	kubectl logs -l app=sales -f --tail=100 | go run app/tooling/logfmt/main.go
 
 kind-restart:
 	kubectl rollout restart deployment sales-dep

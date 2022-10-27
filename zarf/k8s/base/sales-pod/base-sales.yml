@@ -23,3 +23,26 @@ spec:
       containers:
       - name: sales-api-pod
         image: sales-api-image #this is patched by kustomization image info in kind/sales-pod/kustomization.yml
+        ports:
+        - name: sales-api
+          containerPort: 3000
+        - name: sales-api-debug
+          containerPort: 4000
+
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: sales-service
+  namespace: sales-system
+spec:
+  type: ClusterIP
+  selector:
+    app: sales
+  ports:
+  - port: 3000
+    name: sales-api
+    targetPort: sales-api
+  - port: 4000
+    name: sales-api-debug
+    targetPort: sales-api-debug
