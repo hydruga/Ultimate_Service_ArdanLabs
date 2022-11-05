@@ -22,13 +22,48 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: sales-api-pod
-        image: sales-api-image #this is patched by kustomization image info in kind/sales-pod/kustomization.yml
+      #this is patched by kustomization image info in kind/sales-pod/kustomization.yml
+        image: sales-api-image 
         ports:
         - name: sales-api
           containerPort: 3000
         - name: sales-api-debug
           containerPort: 4000
-
+        readinessProbe:
+          httpGet:
+            path: /debug/readiness
+            port: 4000
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        livenessProbe:
+          httpGet:
+            path: /debug/liveness
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KUBERNETES_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
 ---
 apiVersion: v1 
 kind: Service

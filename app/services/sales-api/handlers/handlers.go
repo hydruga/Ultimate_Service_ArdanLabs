@@ -6,6 +6,12 @@ import (
 	"expvar"
 	"net/http"
 	"net/http/pprof"
+	"os"
+
+	"github.com/hydruga/ultimate_service/app/foundation/web"
+	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/debug/checkgrp"
+	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/v1/testgrp"
+	"go.uber.org/zap"
 )
 
 // DebugStandardLibraryMux registers all the debug routes from the standard library
@@ -26,6 +32,34 @@ func DebugStandardLibraryMux() *http.ServeMux {
 	return mux
 }
 
-func DebugMux() {
+func DebugMux(build string, log *zap.SugaredLogger) http.Handler {
+	mux := DebugStandardLibraryMux()
 
+	// Register debug check endpoints
+	cgh := checkgrp.Handlers{
+		Build: build,
+		Log:   log,
+	}
+	mux.HandleFunc("/debug/readiness", cgh.Readiness)
+	mux.HandleFunc("/debug/liveness", cgh.Liveness)
+
+	return mux
+}
+
+// APIMuxConfig contains all the mandatory systems required by handlers.
+type APIMuxConfig struct {
+	Shutdown chan os.Signal
+	Log      *zap.SugaredLogger
+}
+
+// APImux constructs an http.Handler with all application routes defined.
+func APIMux(cfg APIMuxConfig) *web.App {
+	app := web.NewApp(cfg.Shutdown)
+
+	tgh := testgrp.Handlers{
+		Log: cfg.Log,
+	}
+	app.Handle(http.MethodGet, "v1", "/v1/test", tgh.Test)
+
+	return app
 }

@@ -1,4 +1,11 @@
 SHELL := /bin/bash
+# =================================================================
+# Testing Running System
+#
+# Access metrics directly (4000) or through the sidecar (3001)
+# go install github.com/divan/expvarmon@latest
+# Run in terminal below
+# expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 
 #++++++++++++++++++++ SETUP DEV FOR MAC ++++++++++++++++++++++++++++
 dev.setup.mac:
