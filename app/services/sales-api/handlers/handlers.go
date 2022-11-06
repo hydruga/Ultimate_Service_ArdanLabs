@@ -8,6 +8,7 @@ import (
 	"net/http/pprof"
 	"os"
 
+	"github.com/hydruga/ultimate_service/app/business/web/mid"
 	"github.com/hydruga/ultimate_service/app/foundation/web"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/debug/checkgrp"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/v1/testgrp"
@@ -54,11 +55,13 @@ type APIMuxConfig struct {
 
 // APImux constructs an http.Handler with all application routes defined.
 func APIMux(cfg APIMuxConfig) *web.App {
-	// Construct the web.App which holds all routes as well as common Middleware
+	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(
 		cfg.Shutdown,
+		mid.Logger(cfg.Log),
 	)
 
+	// Load the routes for the different versions of the API.
 	v1(app, cfg)
 
 	return app
