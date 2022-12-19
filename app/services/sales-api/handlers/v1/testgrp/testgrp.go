@@ -21,6 +21,7 @@ func (h Handlers) Test(ctx context.Context, w http.ResponseWriter, r *http.Reque
 		//return errors.New("untrusted errors")
 		//return web.NewShutdownError("restart service")
 		return validate.NewRequestError(errors.New("trusted error"), http.StatusBadRequest)
+		//panic("testing panic")
 	}
 
 	status := struct {

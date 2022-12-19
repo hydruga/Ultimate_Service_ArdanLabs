@@ -6,7 +6,14 @@ SHELL := /bin/bash
 # go install github.com/divan/expvarmon@latest
 # Run in terminal below
 # expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
+# hey -m GET -c 100 -n 10000 http://localhost:3000/v1/test
 
+# To generate a private/public key PEM file.
+# openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+# openssl rsa -pubout -in private.pem -out public.pem
+# ./sales-admin genkey
+#
+#
 #++++++++++++++++++++ SETUP DEV FOR MAC ++++++++++++++++++++++++++++
 dev.setup.mac:
 	brew update
@@ -14,6 +21,7 @@ dev.setup.mac:
 	brew list kubectl || brew install kubectl
 	brew list kustomize || brew install kustomize
 	brew list pgcli || brew install pgcli
+	brew list hey || brew install hey
 
 git-add:
 	git add -A
@@ -21,6 +29,9 @@ git-add:
 
 run:
 	go run app/services/sales-api/main.go | go run app/tooling/logfmt/main.go
+
+admin: 
+	go run app/tooling/admin/main.go
 
 VERSION := 1.0
 
