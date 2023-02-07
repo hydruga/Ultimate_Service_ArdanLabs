@@ -68,12 +68,12 @@ func genToken() error {
 			ExpiresAt: time.Now().Add(8760 * time.Hour).Unix(), //jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  time.Now().UTC().Unix(),                 //jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: []string{"ADMIN"},
+		Roles: []string{"USER"}, // Change for ADMIN claims passed to the handler
 	}
 
 	method := jwt.GetSigningMethod("RS256")
 	token := jwt.NewWithClaims(method, claims) // Here we generate the token.
-	token.Header["kid"] = "private.pem"        //key id - not safe but using key file name.
+	token.Header["kid"] = "private"            //key id - not safe but using key file name.
 
 	tokenStr, err := token.SignedString(privateKey)
 	if err != nil {

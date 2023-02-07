@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf"
+	"github.com/hydruga/ultimate_service/app/business/sys/auth"
+	"github.com/hydruga/ultimate_service/app/foundation/keystore"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
@@ -60,6 +62,11 @@ func run(log *zap.SugaredLogger) error {
 			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:20s,mask"` //mask can be used as well as noprint here
 		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			// This is the file name, with ".pem" trimmed
+			ActiveKID string `conf:"default:private"`
+		}
 	}{
 		Version: conf.Version{
 			SVN:  build,
@@ -88,6 +95,23 @@ func run(log *zap.SugaredLogger) error {
 		return fmt.Errorf("generating config for output: %w", err)
 	}
 	log.Infow("startup", "config", out)
+
+	// =========================================================================
+	// Initialize Authentication support
+
+	log.Infow("startup", "status", "initializing authentication support")
+
+	// Construct a key store based on the key files stored in
+	// the specified directory.
+	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	if err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+
+	auth, err := auth.New(cfg.Auth.ActiveKID, ks)
+	if err != nil {
+		return fmt.Errorf("error constructing auth: %w", err)
+	}
 
 	// =========================================================================
 	// Start Debug Service
@@ -123,6 +147,7 @@ func run(log *zap.SugaredLogger) error {
 	apiMux := handlers.APIMux(handlers.APIMuxConfig{
 		Shutdown: shutdown,
 		Log:      log,
+		Auth:     auth,
 	})
 	// Construct a server to service requests against the mux
 	api := http.Server{

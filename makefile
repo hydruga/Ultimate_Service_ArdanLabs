@@ -13,7 +13,10 @@ SHELL := /bin/bash
 # openssl rsa -pubout -in private.pem -out public.pem
 # ./sales-admin genkey
 #
-#
+# Testing Auth
+# curl -il http://localhost:3000/v1/testauth
+# curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/testauth
+# 
 #++++++++++++++++++++ SETUP DEV FOR MAC ++++++++++++++++++++++++++++
 dev.setup.mac:
 	brew update
@@ -26,12 +29,26 @@ dev.setup.mac:
 git-add:
 	git add -A
 	git commit -m "New files added"
+# ========================================================================
 
 run:
 	go run app/services/sales-api/main.go | go run app/tooling/logfmt/main.go
 
 admin: 
 	go run app/tooling/admin/main.go
+
+
+# =========================================================================
+# Running tests within the local computer.
+# walk through entire project tree " ./... "
+# count=1 means "ignore cache"
+# staticcheck means "lint things"
+test:
+	go test ./... -count=1
+	staticcheck -checks=all ./...
+
+# =========================================================================
+# Building Containers
 
 VERSION := 1.0
 

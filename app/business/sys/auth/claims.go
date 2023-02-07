@@ -7,6 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// Expected values for Claims.Roles
+// Two different roles in the system
 const (
 	RoleAdmin = "ADMIN"
 	RoleUser  = "USER"
@@ -14,10 +16,11 @@ const (
 
 // Claims represents the authorization claims transmitted via a JWT.
 type Claims struct {
-	jwt.RegisteredClaims
+	jwt.StandardClaims
 	Roles []string `json:"roles"`
 }
 
+// Authorized returns true if role exists.
 func (c Claims) Authorized(roles ...string) bool {
 	for _, has := range c.Roles {
 		for _, want := range roles {

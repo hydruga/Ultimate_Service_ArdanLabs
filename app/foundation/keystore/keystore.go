@@ -29,7 +29,7 @@ func New() *KeyStore {
 	}
 }
 
-// NewMap constructs KeyStore with an initial set of keys.
+// Newmap constructs KeyStore with an initial set of keys.
 func Newmap(store map[string]*rsa.PrivateKey) *KeyStore {
 	return &KeyStore{
 		store: store,
@@ -54,6 +54,7 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 		if path.Ext(fileName) != ".pem" {
 			return nil
 		}
+		// Could be physical disk, api call, or file here.
 		file, err := fsys.Open(fileName)
 		if err != nil {
 			return fmt.Errorf("opening key file: %w", err)
@@ -76,6 +77,8 @@ func NewFS(fsys fs.FS) (*KeyStore, error) {
 	}
 	return &ks, nil
 }
+
+// Add() and Remove() NOT USED CURRENTLY, JUST A WAY TO ADD/REMOVE NEW KEYS INTO KEYSTORE.
 
 // Add adds a private key and combination kid to the store.
 func (ks *KeyStore) Add(privateKey *rsa.PrivateKey, kid string) {

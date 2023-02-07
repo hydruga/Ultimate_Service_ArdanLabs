@@ -8,6 +8,7 @@ import (
 	"net/http/pprof"
 	"os"
 
+	"github.com/hydruga/ultimate_service/app/business/sys/auth"
 	"github.com/hydruga/ultimate_service/app/business/web/mid"
 	"github.com/hydruga/ultimate_service/app/foundation/web"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/debug/checkgrp"
@@ -51,9 +52,10 @@ func DebugMux(build string, log *zap.SugaredLogger) http.Handler {
 type APIMuxConfig struct {
 	Shutdown chan os.Signal
 	Log      *zap.SugaredLogger
+	Auth     *auth.Auth
 }
 
-// APImux constructs an http.Handler with all application routes defined.
+// APIMux constructs an http.Handler with all application routes defined.
 func APIMux(cfg APIMuxConfig) *web.App {
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(
@@ -78,4 +80,5 @@ func v1(app *web.App, cfg APIMuxConfig) {
 		Log: cfg.Log,
 	}
 	app.Handle(http.MethodGet, version, "/test", tgh.Test)
+	app.Handle(http.MethodGet, version, "/testauth", tgh.Test, mid.Authenticate(cfg.Auth), mid.Authorize("USER"))
 }

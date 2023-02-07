@@ -18,6 +18,7 @@ type KeyLookup interface {
 
 // Auth is used to authenticate clients. It can generate a token for a
 // set of users claims and recreate the claims by parsing the token.
+// activeKID denotes the private.pem file
 type Auth struct {
 	activeKID string
 	keyLookup KeyLookup
