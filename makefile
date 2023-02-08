@@ -17,6 +17,9 @@ SHELL := /bin/bash
 # curl -il http://localhost:3000/v1/testauth
 # curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/testauth
 # 
+# Database Access
+# dblab --host 0.0.0.0 --user postgres --db postgres --pass postgres --ssl disable --port 5432 --driver postgres
+#
 #++++++++++++++++++++ SETUP DEV FOR MAC ++++++++++++++++++++++++++++
 dev.setup.mac:
 	brew update
@@ -87,6 +90,8 @@ kind-load:
 # Can use cat for file then use as input for apply -f
 # cat zarf/k8s/base/sales-pod/base-sales.yml | kubectl apply -f -
 kind-apply:
+	kustomize build zarf/k8s/kind/database-pod | kubectl apply -f -
+	kubectl wait --namespace=database-system --timeout=120s --for=condition=Available deployment/database-pod
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
 kind-status:
@@ -102,7 +107,10 @@ kind-restart:
 	kubectl rollout restart deployment sales-dep
 
 kind-status-sales:
-	kubectl get pods -o wide -w 
+	kubectl get pods -o wide -w
+
+kind-status-db:
+	kubectl get pods -o wide -w --namespace=database-system
 
 kind-update: all kind-load kind-restart
 

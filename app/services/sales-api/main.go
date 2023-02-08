@@ -14,6 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf"
 	"github.com/hydruga/ultimate_service/app/business/sys/auth"
+	"github.com/hydruga/ultimate_service/app/business/sys/database"
 	"github.com/hydruga/ultimate_service/app/foundation/keystore"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -67,6 +68,15 @@ func run(log *zap.SugaredLogger) error {
 			// This is the file name, with ".pem" trimmed
 			ActiveKID string `conf:"default:private"`
 		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			Host         string `conf:"default:localhost"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:0"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
 	}{
 		Version: conf.Version{
 			SVN:  build,
@@ -114,6 +124,29 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	// =========================================================================
+	// Database Support
+
+	// Create connectivity to the database.
+	log.Infow("startup", "status", "initializing database support", "host", cfg.DB.Host)
+
+	db, err := database.Open(database.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to db: %w", err)
+	}
+	defer func() {
+		log.Infow("shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+		db.Close()
+	}()
+
+	// =========================================================================
 	// Start Debug Service
 
 	log.Infow("startup", "status", "debug router started", "host", cfg.Web.DebugHost)
@@ -124,7 +157,7 @@ func run(log *zap.SugaredLogger) error {
 	// related endpoints. This includes the standard library endpoints.
 
 	// Construct the mux for the debug calls.
-	debugMux := handlers.DebugMux(build, log)
+	debugMux := handlers.DebugMux(build, log, db)
 
 	// Start the service listening for debug requests.
 	// Not concerned with shutting this down with load shedding, ie don't need custom http.Server object
@@ -148,6 +181,7 @@ func run(log *zap.SugaredLogger) error {
 		Shutdown: shutdown,
 		Log:      log,
 		Auth:     auth,
+		DB:       db,
 	})
 	// Construct a server to service requests against the mux
 	api := http.Server{
