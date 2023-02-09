@@ -20,6 +20,12 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       terminationGracePeriodSeconds: 60
+      initContainers:
+      # sales-api init container configuration
+      # migrations and seeding take place on startup
+      - name: init-migrate
+        image: sales-api-image
+        command: ['./admin']
       containers:
       - name: sales-api-pod 
         image: sales-api-image 

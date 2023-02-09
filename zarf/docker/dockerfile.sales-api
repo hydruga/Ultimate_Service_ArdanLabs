@@ -5,6 +5,11 @@ ARG BUIL_REF
 #copying code into container
 COPY . /service
 
+# Build the admin binary
+WORKDIR /service/app/tooling/admin
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+# Build the service binary
 WORKDIR /service/app/services/sales-api
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
@@ -13,10 +18,11 @@ ARG BUILD_DATE
 ARG BUILD_REF
 COPY --from=build_sales-api /service/zarf/keys/. /service/zarf/keys/.
 
-# go build takes name service from the context of the folder here
+# go build takes the name "service" from the context of the folder here
+COPY --from=build_sales-api /service/zarf/keys /service/zarf/keys/.
+COPY --from=build_sales-api /service/app/tooling/admin/admin /service/admin
 COPY --from=build_sales-api /service/app/services/sales-api/sales-api /service/sales-api
-# #RUN chown -R root.root service
-# RUN ["chmod","+x","service"]
+
 WORKDIR /service
 CMD ["./sales-api"]
 
