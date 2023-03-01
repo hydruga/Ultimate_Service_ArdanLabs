@@ -6,12 +6,20 @@ SHELL := /bin/bash
 # curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
 # export TOKEN="COPY TOKEN STRING FROM LAST CALL"
 # curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
-
+#
+# hey -m GET -c 100 -n 10000 "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
 # Access metrics directly (4000) or through the sidecar (3001)
 # go install github.com/divan/expvarmon@latest
-# Run in terminal below
+#
+
+# Access zipkin
+# zipkin: http://localhost:9411
+
+# For testing load services
+#
 # expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
 # hey -m GET -c 100 -n 10000 http://localhost:3000/v1/test
+# 
 
 # To generate a private/public key PEM file.
 # openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048

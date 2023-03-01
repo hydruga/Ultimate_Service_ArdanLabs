@@ -27,6 +27,14 @@ spec:
         image: sales-api-image
         command: ['./admin']
       containers:
+      # zipkin container configuration
+      # should not be part of base for production.
+      - name: zipkin
+        image: openzipkin
+        ports:
+        - name: zipkin
+          containerPort: 9411
+      # sales-pod container
       - name: sales-api-pod 
         image: sales-api-image 
         ports:
@@ -81,6 +89,9 @@ spec:
   selector:
     app: sales
   ports:
+  - port: 9411
+    name: zipkin 
+    targetPort: zipkin
   - port: 3000
     name: sales-api
     targetPort: sales-api
