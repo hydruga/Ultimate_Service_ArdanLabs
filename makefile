@@ -2,6 +2,11 @@ SHELL := /bin/bash
 # =================================================================
 # Testing Running System
 #
+# For testing a simple query on the system. Don't forget to `make seed` first.
+# curl --user "admin@example.com:gophers" http://localhost:3000/v1/users/token
+# export TOKEN="COPY TOKEN STRING FROM LAST CALL"
+# curl -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+
 # Access metrics directly (4000) or through the sidecar (3001)
 # go install github.com/divan/expvarmon@latest
 # Run in terminal below
@@ -77,7 +82,7 @@ kind-up:
 		--image kindest/node:v1.24.6@sha256:97e8d00bc37a7598a0b32d1fabd155a96355c49fa0d4d4790aab0f161bf31be1 \
 		--name $(KIND_CLUSTER) \
 		--config zarf/k8s/kind/kind-config.yml
-	kubectl config set-context --current --namespace=sales-system 
+	kubectl config set-context --current --namespace=sales-system
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)

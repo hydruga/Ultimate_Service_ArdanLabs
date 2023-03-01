@@ -8,11 +8,13 @@ import (
 	"net/http/pprof"
 	"os"
 
+	userCore "github.com/hydruga/ultimate_service/app/business/core/user"
 	"github.com/hydruga/ultimate_service/app/business/sys/auth"
 	"github.com/hydruga/ultimate_service/app/business/web/mid"
 	"github.com/hydruga/ultimate_service/app/foundation/web"
 	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/debug/checkgrp"
-	"github.com/hydruga/ultimate_service/app/services/sales-api/handlers/v1/testgrp"
+	v1TestGrp "github.com/hydruga/ultimate_service/app/services/sales-api/handlers/v1/testgrp"
+	v1UserGrp "github.com/hydruga/ultimate_service/app/services/sales-api/handlers/v1/usergrp"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
@@ -79,9 +81,21 @@ func APIMux(cfg APIMuxConfig) *web.App {
 func v1(app *web.App, cfg APIMuxConfig) {
 	const version = "v1"
 
-	tgh := testgrp.Handlers{
+	tgh := v1TestGrp.Handlers{
 		Log: cfg.Log,
 	}
 	app.Handle(http.MethodGet, version, "/test", tgh.Test)
 	app.Handle(http.MethodGet, version, "/testauth", tgh.Test, mid.Authenticate(cfg.Auth), mid.Authorize("USER"))
+
+	// Register user management and authentication endpoints.
+	ugh := v1UserGrp.Handlers{
+		User: userCore.NewCore(cfg.Log, cfg.DB),
+		Auth: cfg.Auth,
+	}
+	app.Handle(http.MethodGet, version, "/users/token", ugh.Token)
+	app.Handle(http.MethodGet, version, "/users/:page/:rows", ugh.Query, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, version, "/users/:id", ugh.QueryByID, mid.Authenticate(cfg.Auth))
+	app.Handle(http.MethodPost, version, "/users", ugh.Create, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodPut, version, "/users/:id", ugh.Update, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodDelete, version, "/users/:id", ugh.Delete, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 }

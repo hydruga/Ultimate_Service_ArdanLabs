@@ -71,9 +71,9 @@ func New(activeKID string, keyLookup KeyLookup) (*Auth, error) {
 }
 
 // GenerateToken generates a signed JWT token string representing the user Claims.
-func (a *Auth) GenerateToken(kid string, claims Claims) (string, error) {
+func (a *Auth) GenerateToken(claims Claims) (string, error) {
 	token := jwt.NewWithClaims(a.method, claims)
-	token.Header["kid"] = kid
+	token.Header["kid"] = a.activeKID
 
 	privateKey, err := a.keyLookup.PrivateKey(a.activeKID)
 	if err != nil {

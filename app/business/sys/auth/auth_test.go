@@ -50,8 +50,8 @@ func TestAuth(t *testing.T) {
 				},
 				Roles: []string{auth.RoleAdmin},
 			}
-
-			token, err := a.GenerateToken(keyID, claims)
+			token, err := a.GenerateToken(claims)
+			// token, err := a.GenerateToken(keyID, claims)
 			if err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to generate a JWT: %v", failed, testID, err)
 			}
